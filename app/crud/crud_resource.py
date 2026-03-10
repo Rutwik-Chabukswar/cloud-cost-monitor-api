@@ -1,11 +1,16 @@
+import logging
 from sqlalchemy.orm import Session
 from app.models.resource import Resource, UsageRecord
 from app.schemas.resource import ResourceCreate, ResourceUpdate, UsageRecordCreate
 from datetime import datetime
 from sqlalchemy import func
 
+logger = logging.getLogger("cloud-cost-monitor")
+
 # CRUD operations for Resources
 def create_resource(db: Session, resource: ResourceCreate) -> Resource:
+    """Create a new resource in the cloud."""
+    logger.info(f"Creating resource: {resource.name} ({resource.service_type})")
     db_resource = Resource(**resource.model_dump())
     db.add(db_resource)
     db.commit()
@@ -13,12 +18,16 @@ def create_resource(db: Session, resource: ResourceCreate) -> Resource:
     return db_resource
 
 def get_resources(db: Session, skip: int = 0, limit: int = 100):
+    """Retrieve all resources with pagination."""
     return db.query(Resource).offset(skip).limit(limit).all()
 
 def get_resource(db: Session, resource_id: int):
+    """Retrieve a specific resource by ID."""
     return db.query(Resource).filter(Resource.id == resource_id).first()
 
 def delete_resource(db: Session, resource_id: int):
+    """Delete a resource by ID."""
+    logger.info(f"Deleting resource id: {resource_id}")
     db_resource = db.query(Resource).filter(Resource.id == resource_id).first()
     if db_resource:
         db.delete(db_resource)
@@ -27,6 +36,8 @@ def delete_resource(db: Session, resource_id: int):
 
 # CRUD operations for Usage Records
 def record_usage(db: Session, usage: UsageRecordCreate) -> UsageRecord:
+    """Record usage hours for a specific resource."""
+    logger.info(f"Recording usage for resource id: {usage.resource_id}, hours: {usage.hours}")
     db_usage = UsageRecord(**usage.model_dump())
     db.add(db_usage)
     db.commit()
@@ -35,13 +46,13 @@ def record_usage(db: Session, usage: UsageRecordCreate) -> UsageRecord:
 
 # Analytics helpers
 def get_resource_total_cost(db: Session, resource_id: int) -> float:
-    from sqlalchemy import func
+    """Calculate the total cost for a single resource."""
     total_hours = db.query(func.sum(UsageRecord.hours)).filter(UsageRecord.resource_id == resource_id).scalar() or 0.0
     resource = get_resource(db, resource_id)
     return total_hours * resource.unit_price if resource else 0.0
 
 def get_service_summary(db: Session):
-    # This is a bit complex for a simple CRUD file, might move later
+    """Calculate the total cost aggregated by service type."""
     results = db.query(
         Resource.service_type,
         func.sum(UsageRecord.hours * Resource.unit_price)
@@ -49,6 +60,7 @@ def get_service_summary(db: Session):
     return [{"service_type": s[0], "total_cost": s[1]} for s in results]
 
 def get_top_expensive_resources(db: Session, limit: int = 5):
+    """Identify the top N most expensive resources."""
     results = db.query(
         Resource.id,
         Resource.name,

@@ -4,77 +4,97 @@ A production-ready FastAPI backend for tracking cloud resource usage and cost an
 
 ## Features
 
-- **Resource Management**: Create, view, and list cloud resources (EC2, S3, RDS, etc.) with custom hourly rates.
+- **Resource Management**: Create, view, and list cloud resources (EC2, S3, RDS, etc.).
 - **Usage Tracking**: Record hourly usage for specific resources.
-- **Cost Analytics**:
-  - Individual resource total cost calculation.
-  - Service-wide cost summaries.
-  - Identification of most expensive resources.
-- **Database Support**: Built-in support for PostgreSQL and SQLite (fallback for local development).
+- **Cost Analytics**: Summarize costs by service type and identify top expensive resources.
+- **Containerized Integration**: One-command deployment with Docker Compose.
+- **Health Monitoring**: Advanced observability with Docker healthchecks and service dependencies.
+- **Production-Ready Core**:
+  - Environment Configuration: Pydantic settings with `.env` support.
+  - Health Monitoring: Dedicated health check endpoint with DB connectivity verification.
+  - Structured Logging: Request/Response middleware and detailed operation logs.
+  - Global Error Handling: Centralized exception management for clean API response.
+  - Rich API Docs: Enhanced Swagger UI metadata with tags and descriptions.
 
-## Project Structure
+---
 
-```text
-app/
-├── api/             # API routes and dependencies
-│   └── v1/          # Version 1 of the API
-├── core/            # App configurations and core settings
-├── crud/            # Database operations (CRUD)
-├── db/              # Database session and base model setup
-├── models/          # SQLAlchemy Database models
-└── schemas/         # Pydantic validation schemas
+## 🚀 Getting Started with Docker (Recommended)
+
+The easiest way to run the API and its PostgreSQL database is using **Docker Compose**.
+
+### 1. Prerequisites
+- Docker installed
+- Docker Compose installed
+
+### 2. Run the System
+Navigate to the project root and execute:
+
+```bash
+docker-compose up --build
 ```
 
-## Getting Started
+The system will:
+1.  **Initialize PostgreSQL**: Create a containerized database (`cloud_cost_db`).
+2.  **Wait for Database**: Use a healthcheck to ensure the database is ready before starting the API.
+3.  **Start FastAPI**: Build the lightweight Python container and start the backend.
 
-### Prerequisites
+- **API URL**: [http://localhost:8000](http://localhost:8000)
+- **Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health Check**: [http://localhost:8000/api/v1/health/](http://localhost:8000/api/v1/health/)
 
+---
+
+## 🛠 Manual Installation (Optional Local Development)
+
+### 1. Prerequisites
 - Python 3.8+
 - PostgreSQL (optional, defaults to SQLite)
 
-### Installation
+### 2. Setup
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-### Running the Project
-
-Run the development server using:
+### 3. Start Server
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`.
-You can access the interactive Swagger documentation at `http://localhost:8000/docs`.
+## Monitoring & Analytics
 
-## API Usage Examples
+- **Health Monitoring**: `GET /api/v1/health/`
+- **Analytics - Top Expensive**: `GET /api/v1/analytics/top-expensive`
+- **Analytics - Service Summary**: `GET /api/v1/analytics/service-summary`
 
-### 1. Create a Cloud Resource
-**POST `/api/v1/resources/`**
+## Authentication
+
+The API uses JWT (JSON Web Tokens) for authentication.
+
+### 1. Register a User
+**POST `/api/v1/auth/register`**
 ```json
 {
-  "name": "AWS-EC2-Production",
-  "service_type": "EC2",
-  "unit_price": 0.05
+  "email": "user@example.com",
+  "password": "securepassword123"
 }
 ```
 
-### 2. Record Usage
-**POST `/api/v1/usage/`**
+### 2. Login
+**POST `/api/v1/auth/login`**
+Use `application/x-www-form-urlencoded` with fields:
+- `username`: your email
+- `password`: your password
+
+**Sample Response**:
 ```json
 {
-  "resource_id": 1,
-  "hours": 24.5
+  "access_token": "eyJhbG...",
+  "token_type": "bearer"
 }
 ```
 
-### 3. Get Cost Analytics
-**GET `/api/v1/analytics/top-expensive`**
+### 3. Using Protected Routes
+For routes like `POST /api/v1/resources/` or `POST /api/v1/usage/`, include the token in the headers:
+`Authorization: Bearer <your_access_token>`
