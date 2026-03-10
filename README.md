@@ -116,7 +116,7 @@ Execute the following from the project root:
 pytest
 ```
 
-This will automatically pick up all tests in the `tests/` directory and report on the status.
+This will automatically pick up all tests in the `tests/` directory, configure the `PYTHONPATH` via `pytest.ini`, and report on the status.
 
 ### 3. Test Coverage (Optional)
 To see which parts of your code are tested:

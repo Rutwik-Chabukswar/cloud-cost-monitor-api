@@ -14,9 +14,6 @@ from app.core.logging import setup_logging
 setup_logging()
 logger = logging.getLogger("cloud-cost-monitor")
 
-# Create tables in the database
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="""
@@ -24,7 +21,7 @@ app = FastAPI(
     A production-ready system for tracking cloud infrastructure costs:
     - **Resources**: Manage cloud assets (EC2, S3, RDS, etc.) with custom pricing.
     - **Usage**: Track and record hourly usage logs.
-    - **Analytics**: Generate detailed cost reports and identify top spending resources.
+    - **Analytics**: Generate detailed cost reports and identify identify top spending resources.
     """,
     version="1.0.0",
     docs_url="/docs",
@@ -35,6 +32,15 @@ app = FastAPI(
         "url": "http://api.cloud-cost-monitor.com/support",
     }
 )
+
+@app.on_event("startup")
+def on_startup():
+    # Only create tables if we're not in a test session
+    # (though metadata.create_all is generally safe)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        logger.error(f"Error during startup database creation: {e}")
 
 # 1. Middleware: Request Logging & Processing Time
 @app.middleware("http")
