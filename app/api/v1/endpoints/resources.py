@@ -23,6 +23,21 @@ def view_resource(resource_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Resource not found")
     return db_resource
 
+@router.put("/{resource_id}", response_model=Resource)
+def update_resource(resource_id: int, resource_in: ResourceUpdate, db: Session = Depends(get_db)):
+    db_resource = crud_resource.get_resource(db, resource_id=resource_id)
+    if db_resource is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    # Update resource fields
+    for field, value in resource_in.model_dump(exclude_unset=True).items():
+        setattr(db_resource, field, value)
+    
+    db.add(db_resource)
+    db.commit()
+    db.refresh(db_resource)
+    return db_resource
+
 @router.delete("/{resource_id}")
 def delete_resource(resource_id: int, db: Session = Depends(get_db)):
     db_resource = crud_resource.delete_resource(db, resource_id=resource_id)
