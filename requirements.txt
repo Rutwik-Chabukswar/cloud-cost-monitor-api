@@ -5,7 +5,10 @@ psycopg2-binary
 pydantic
 pydantic-settings
 python-dotenv
-sqlite3
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
+pytest
+httpx
+email-validator
+bcrypt==4.0.1

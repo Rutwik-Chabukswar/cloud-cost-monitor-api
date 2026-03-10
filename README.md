@@ -98,3 +98,28 @@ Use `application/x-www-form-urlencoded` with fields:
 ### 3. Using Protected Routes
 For routes like `POST /api/v1/resources/` or `POST /api/v1/usage/`, include the token in the headers:
 `Authorization: Bearer <your_access_token>`
+
+## Automated Testing
+
+The project uses `pytest` for automated testing with an isolated SQLite test database.
+
+### 1. Prerequisites
+Ensure dev dependencies are installed:
+```bash
+pip install pytest httpx
+```
+
+### 2. Run All Tests
+Execute the following from the project root:
+
+```bash
+pytest
+```
+
+This will automatically pick up all tests in the `tests/` directory and report on the status.
+
+### 3. Test Coverage (Optional)
+To see which parts of your code are tested:
+```bash
+pytest --cov=app tests/
+```
